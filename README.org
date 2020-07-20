@@ -1,0 +1,56 @@
+#+TITLE: JIRA REST API: Export all issues
+#+OPTIONS: ^:nil
+#+PROPERTY: header-args:sh :session *shell jira-rest-api-export-all-issues sh* :results silent raw
+#+PROPERTY: header-args:python :session *shell jira-rest-api-export-all-issues python* :results silent raw
+
+** System environment
+
+- JIRA 7.6.1
+
+** Imports
+
+#+BEGIN_SRC python :tangle src/export_issues.py
+import json
+import requests
+#+END_SRC
+
+** Params
+
+#+BEGIN_SRC python :tangle src/export_issues.py
+URL = "https://admin:password@jira.example.com/"
+PROJECT_ID = "HSP"
+#+END_SRC
+
+** Get issues
+
+#+BEGIN_SRC python :tangle src/export_issues.py
+url = "%s/rest/api/2/search" % URL
+data = {
+    "jql": "project = %s" % PROJECT_ID,
+    "startAt": 0,
+    "maxResults": 10000000,
+    "fields": [
+        "summary",
+	"status",
+	"assignee",
+    ]
+}
+headers = {"content-type": "application/json"}
+r = requests.post(url, json=data, headers=headers)
+r.status_code
+#+END_SRC
+
+** Save worklog JSON recrords
+
+#+BEGIN_SRC python :tangle src/export_issues.py
+fn = "data/issues_%s.json" % PROJECT_ID
+f = open(fn, "wt")
+f.write(json.dumps(r.json(), indent=2))
+f.close()
+#+END_SRC
+
+** References
+
+- https://developer.atlassian.com/server/jira/platform/rest-apis/
+
+- https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/
